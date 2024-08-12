@@ -1,4 +1,4 @@
-# footballscoresim
+# Football Score Sim
 A football (soccer) scoreline simulator.
 
 Right now, works for 20 pre-set teams, but you can make your own teams. Follow the instructions as shown on the screen.
