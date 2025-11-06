@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Score Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: 
+            linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    url('grass.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .team-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .team-column {
+            flex: 1;
+            min-width: 200px;
+        }
+        .team-column h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .game-log {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 4px;
+        }
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            background-color: #f2f2f2;
+            padding: 15px;
+            border-radius: 8px;
+            position: relative;
+        }
+        .team-score {
+            text-align: center;
+        }
+        .team-name {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .score {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .aggregate-display {
+            font-size: 0.8em;
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            text-align: center;
+            color: #666;
+        }
+        .game-time {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 10px 0;
+            width: 100px; /* Fixed width for better alignment */
+        }
+        .match-status {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 10px 0;
+            width: 100px; /* Matches game-time width */
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+        .penalty-shootout {
+            margin-top: 20px;
+        }
+        .stats-container {
+            margin-top: 20px;
+        }
+        .simulation-mode {
+            margin: 15px 0;
+        }
+        .mode-option {
+            margin: 5px 0;
+        }
+        .scoreboard-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .settings-container {
+        margin-bottom: 15px;
+        }
+        
+        .settings-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .simulation-mode {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .simulation-mode h4 {
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        .radio-options {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .score-inputs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .score-inputs input {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Football Score Simulator</h1>
+        
+        <div id="setup-screen">
+            <div class="team-select">
+                <div class="team-column">
+                    <h3>Home Team</h3>
+                    <select id="preset-team1">
+                        <option value="AC MILAN">AC Milan</option>
+                        <option value="ARSENAL">Arsenal</option>
+                        <option value="ASTON VILLA">Aston Villa</option>
+                        <option value="ATALANTA">Atalanta</option>
+                        <option value="ATHLETIC CLUB">Athletic Club</option>
+                        <option value="ATLÉTICO MADRID">Atlético</option>
+                        <option value="BARCELONA">Barcelona</option>
+                        <option value="BAYERN MUNICH">Bayern Munich</option>
+                        <option value="BENFICA">Benfica</option>
+                        <option value="BREST">Brest</option>
+                        <option value="CHELSEA">Chelsea</option>
+                        <option value="CHICKEN">CHICKEN</option>
+                        <option value="MAN CITY">City</option>
+                        <option value="DORTMUND">Dortmund</option>
+                        <option value="FIORENTINA">Fiorentina</option>
+                        <option value="ICONS">ICONS</option>
+                        <option value="INTER MILAN">Inter Milan</option>
+                        <option value="JUVENTUS">Juventus</option>
+                        <option value="S.S. LAZIO">Lazio</option>
+                        <option value="RB LEIPZIG">Leipzig</option>
+                        <option value="LEVERKUSEN">Leverkusen</option>
+                        <option value="LIVERPOOL">Liverpool</option>
+                        <option value="MARSEILLE">Marseille</option>
+                        <option value="MONACO">Monaco</option>
+                        <option value="NAPOLI">Napoli</option>
+                        <option value="NEWCASTLE">Newcastle</option>
+                        <option value="PORTO">Porto</option>
+                        <option value="PSG">PSG</option>
+                        <option value="REAL MADRID">Real Madrid</option>
+                        <option value="ROMA">Roma</option>
+                        <option value="SEVILLA">Sevilla</option>
+                        <option value="SPORTING CP">Sporting CP</option>
+                        <option value="TOTTENHAM">Tottenham</option>
+                        <option value="MAN UNITED">United</option>
+                    </select>
+                    <input type="text" id="custom-team1" placeholder="Or enter custom team name">
+                </div>
+                <div class="team-column">
+                    <h3>Away Team</h3>
+                    <select id="preset-team2">
+                        <option value="AC MILAN">AC Milan</option>
+                        <option value="ARSENAL">Arsenal</option>
+                        <option value="ASTON VILLA">Aston Villa</option>
+                        <option value="ATALANTA">Atalanta</option>
+                        <option value="ATHLETIC CLUB">Athletic Club</option>
+                        <option value="ATLÉTICO MADRID">Atlético</option>
+                        <option value="BARCELONA">Barcelona</option>
+                        <option value="BAYERN MUNICH">Bayern Munich</option>
+                        <option value="BENFICA">Benfica</option>
+                        <option value="BREST">Brest</option>
+                        <option value="CHELSEA">Chelsea</option>
+                        <option value="CHICKEN">CHICKEN</option>
+                        <option value="MAN CITY">City</option>
+                        <option value="DORTMUND">Dortmund</option>
+                        <option value="FIORENTINA">Fiorentina</option>
+                        <option value="ICONS">ICONS</option>
+                        <option value="INTER MILAN">Inter Milan</option>
+                        <option value="JUVENTUS">Juventus</option>
+                        <option value="S.S. LAZIO">Lazio</option>
+                        <option value="RB LEIPZIG">Leipzig</option>
+                        <option value="LEVERKUSEN">Leverkusen</option>
+                        <option value="LIVERPOOL">Liverpool</option>
+                        <option value="MARSEILLE">Marseille</option>
+                        <option value="MONACO">Monaco</option>
+                        <option value="NAPOLI">Napoli</option>
+                        <option value="NEWCASTLE">Newcastle</option>
+                        <option value="PORTO">Porto</option>
+                        <option value="PSG">PSG</option>
+                        <option value="REAL MADRID">Real Madrid</option>
+                        <option value="ROMA">Roma</option>
+                        <option value="SEVILLA">Sevilla</option>
+                        <option value="SPORTING CP">Sporting CP</option>
+                        <option value="TOTTENHAM">Tottenham</option>
+                        <option value="MAN UNITED">United</option>
+                    </select>
+                    <input type="text" id="custom-team2" placeholder="Or enter custom team name">
+                </div>
+            </div>
+            
+            <div>
+                <div class="settings-container">
+                    <h3>Match Settings</h3>
+                    
+                    <div class="settings-row">
+                        <div class="simulation-mode">
+                            <h4>Simulation Mode:</h4>
+                            <div class="radio-options">
+                                <label class="radio-option">
+                                    <input type="radio" name="sim-mode" value="live" checked>
+                                    <span>Live Simulation</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="sim-mode" value="immediate">
+                                    <span>Immediate Result</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <label class="checkbox-option">
+                            <input type="checkbox" id="two-legs">
+                            <span>Two-leg tie (with aggregate score)</span>
+                        </label>
+                    </div>
+                    
+                    <div id="leg1-score" class="hidden">
+                        <h4>Leg 1 Score</h4>
+                        <div class="score-inputs">
+                            <input type="number" id="leg1-team1" placeholder="Home team score" min="0">
+                            <input type="number" id="leg1-team2" placeholder="Away team score" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>Team Strength</h3>
+                <select id="strength">
+                    <option value="1">Home team is much stronger than away team</option>
+                    <option value="2">Home team is stronger than away team</option>
+                    <option value="3">Home team is a bit stronger than away team</option>
+                    <option value="4" selected>Teams are equal in strength</option>
+                    <option value="5">Home team is a bit weaker than away team</option>
+                    <option value="6">Home team is weaker than away team</option>
+                    <option value="7">Home team is much weaker than away team</option>
+                </select>
+            </div>
+            
+            <div class="controls">
+                <button id="start-game">Start Simulation</button>
+            </div>
+        </div>
+        
+        <div id="game-screen" class="hidden">
+            <div class="scoreboard">
+                <div class="team-score">
+                    <div class="team-name" id="team1-name">Home</div>
+                    <div class="score" id="team1-score">0</div>
+                </div>
+                <div class="scoreboard-center">
+                    <div class="game-time" id="game-time">0'</div>
+                    <div class="match-status hidden" id="match-status"></div>
+                </div>
+                <div class="team-score">
+                    <div class="team-name" id="team2-name">Away</div>
+                    <div class="score" id="team2-score">0</div>
+                </div>
+                <div class="aggregate-display" id="aggregate-display"></div>
+            </div>
+            
+            <div class="game-log" id="game-log"></div>
+            
+            <div id="match-events">
+                <h3>Match Events</h3>
+                <table id="events-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th id="events-team1">Home</th>
+                            <th id="events-team2">Away</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events-body">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="penalty-shootout" class="penalty-shootout hidden">
+                <h3>Penalty Shootout</h3>
+                <table id="penalty-table">
+                    <thead>
+                        <tr>
+                            <th>Shot</th>
+                            <th id="penalty-team1">Home</th>
+                            <th id="penalty-team2">Away</th>
+                        </tr>
+                    </thead>
+                    <tbody id="penalty-body">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="stats-container hidden" id="stats-container">
+                <h3>Match Statistics</h3>
+                <table id="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Stat</th>
+                            <th id="stats-team1">Home</th>
+                            <th id="stats-team2">Away</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-body">
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="controls" id="post-game-controls">
+                <button id="rematch">Rematch</button>
+                <button id="leg2" class="hidden">Play Leg 2</button>
+                <button id="extra-time" class="hidden">Extra Time</button>
+                <button id="new-match">New Match</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function clearExistingIntervals() {
+            if (gameState.simulationInterval) {
+                clearInterval(gameState.simulationInterval);
+                gameState.simulationInterval = null;
+            }
+        }
+        // Game state
+        const gameState = {
+            team1: { name: "", score: 0, players: [] },
+            team2: { name: "", score: 0, players: [] },
+            time: 0,
+            isLive: true,
+            isImmediate: false,
+            strength: 4,
+            isTwoLegs: false,
+            isLeg2: false,
+            leg1Score: { team1: 0, team2: 0 },
+            events: [],
+            extraTime: { 
+                firstHalf: 0, 
+                secondHalf: 0, 
+                firstExtra: 0, 
+                secondExtra: 0 
+            },
+            isExtraTime: false,
+            isPenalties: false,
+            penalties: { team1: 0, team2: 0, shots: [] },
+            stats: {
+                shots: { team1: 0, team2: 0 },
+                shotsOnTarget: { team1: 0, team2: 0 },
+                possession: { 
+                    team1: Math.floor(Math.random() * 41) + 30, // Random between 30-70
+                    get team2() {
+                        return 100 - this.team1;
+                    }
+                 }
+
+            },
+            extraTimeStats: {
+                shots: { team1: 0, team2: 0 },
+                shotsOnTarget: { team1: 0, team2: 0 }
+            },
+            simulationInterval: null,
+            isSimulating: false,
+            matchEnded: false
+        };
+
+        // DOM elements
+        const elements = {
+            setupScreen: document.getElementById('setup-screen'),
+            gameScreen: document.getElementById('game-screen'),
+            team1Name: document.getElementById('team1-name'),
+            team2Name: document.getElementById('team2-name'),
+            team1Score: document.getElementById('team1-score'),
+            team2Score: document.getElementById('team2-score'),
+            gameTime: document.getElementById('game-time'),
+            matchStatus: document.getElementById('match-status'),
+            gameLog: document.getElementById('game-log'),
+            eventsTeam1: document.getElementById('events-team1'),
+            eventsTeam2: document.getElementById('events-team2'),
+            eventsBody: document.getElementById('events-body'),
+            penaltyTeam1: document.getElementById('penalty-team1'),
+            penaltyTeam2: document.getElementById('penalty-team2'),
+            penaltyBody: document.getElementById('penalty-body'),
+            statsTeam1: document.getElementById('stats-team1'),
+            statsTeam2: document.getElementById('stats-team2'),
+            statsBody: document.getElementById('stats-body'),
+            penaltyShootout: document.getElementById('penalty-shootout'),
+            statsContainer: document.getElementById('stats-container'),
+            leg2Button: document.getElementById('leg2'),
+            extraTimeButton: document.getElementById('extra-time'),
+            aggregateDisplay: document.getElementById('aggregate-display')
+        };
+
+        // Teams
+        const teamPlayers = {
+            "BENFICA": ["N. Otamendi", "A. Silva", "A. Carreras", "T. Araújo", "O. Kökçü", "F. Luís",
+                        "S. Dahl", "Bruma", "M. Aktürkoğlu", "M. Aktürkoğlu", "E. Pavlidis", "E. Pavlidis",
+                        "E. Pavlidis", "E. Pavlidis"],
+            "PORTO": ["I. Marcano","S. Eustáquio", "N. Pérez", "A. Varela", "F. Vieira", "F. Moura",
+                        "R. Mora","R. Mora", "G. Veiga","G. Veiga", "S. Omorodion","S. Omorodion",
+                        "S. Omorodion", "Pepê", "Pepê", "Pepê", "Pepê"],
+            "ATHLETIC CLUB": ["A. Gorosabel", "D. Vivian","Y. Álvarez", "Y. Berchiche", "G. Guruzeta",
+                        "M. Jauregizar", "U. Gómez", "I. Williams", "I. Williams", "A. Berenguer",
+                        "A. Berenguer", "N. Williams", "N. Williams", "N. Williams", "N. Williams"],
+            "FIORENTINA": ["P. Comuzzo", "P. Marí", "L. Ranieri", "Dodô", "R. Mandragora",
+                        "A. Richardson", "N. Fagioli", "R. Gosens", "L. Beltrán", "L. Beltrán",
+                        "M. Kean", "M. Kean", "M. Kean", "M. Kean"],
+            "ICONS": ["P. Maldini", "A. Nesta", "Cafu", "Pelé", "Pelé", "Xavi", "Gullit",
+                     "Z. Zidane", "D. Maradona", "Ronaldinho", "L. Messi", "L. Messi",
+                     "Ronaldinho", "C. Ronaldo", "C. Ronaldo"],
+            "CHICKEN": ["Hector Chicken", "Gustavo Chicken", "Indeed Mustard Chicken",
+                        "LPH Chicken", "Charles the Chicken", "KFC Chicken", "Popeyes Chicken",
+                        "Of course my Chicken", "Father Chicken", "Father Chicken",
+                        "KFC Chicken", "Indeed Mustard Chicken", "Indeed Mustard Chicken"],
+            "ATALANTA": ["S. Posch", "B. Djimsiti", "S. Kolašinac", "R. Bellanova", "M. de Roon",
+                        "M. Pašilić", "D. Zappacosta", "C. De Ketelaere", "C. De Ketelaere",
+                        "M. Retegui", "M. Retegui", "M. Retegui", "A. Lookman", "A. Lookman",
+                        "A. Lookman"],
+            "S.S. LAZIO": ["M. Lazzari", "S. Gigot", "A. Romagnoli", "L. Pellegrini", "M. Guendouzi",
+                        "N. Rovella", "M. Zaccagni", "B. Dia", "G. Isaksen", "G. Isaksen", 
+                        "L. Tchaouna", "L. Tchaouna"],
+            "ROMA": ["E. Ndicka", "G. Mancini", "M. Z. Çelik", "J. Tasende", "L. Paredes",
+                        "M. Koné", "S. El Shaarawy", "L. Pellegrini", "L. Pellegrini", 
+                        "E. Shomurodov", "P. Dybala", "P. Dybala", "P. Dybala", "P. Dybala"],
+            "SPORTING CP": ["E. Quaresma", "O. Diomande", "J. St. Juste", "M. Reis", "G. Catamo",
+                        "M. Hjulmand", "H. Morita", "G. Quenda", "F. Trincão", "F. Trincão",
+                        "C. Harder", "C. Harder"],
+            "ASTON VILLA": ["M. Cash", "E. Konsa", "T. Mings", "I. Maatsen", "J. McGinn", "Y. Tielemans",
+                        "D. Malen", "L. Bailey", "J. Ramsey", "J. Ramsey", "E. Buendia", 
+                        "E. Buendia", "O. Watkins", "O. Watkins", "O. Watkins"],
+            "MARSEILLE": ["M. Murillo", "L. Balerdi", "D. Cornelius", "L. Henrique", "V. Rongier",
+                        "P. Højbjerg", "Q. Merlin", "B. Nadir", "A. Rabiot", "A. Rabiot", 
+                        "M. Greenwood", "M. Greenwood", "M. Greenwood"],
+            "MONACO": ["Vanderson", "T. Kehrer", "C. Mawissa", "C. Henrique", "M. Akliouche",
+                        "D. Zakaria", "S. Magassa", "T. Minamino", "T. Minamino", "T. Minamino",
+                        "M. Biereth", "B. Embolo", "B. Embolo"],
+            "BREST": ["J. Le Cardinal", "B. Chardonnet", "A. Ndiaye", "M. Haïdara", "E. Fernandes",
+                        "M. Camara", "H. Magnetti", "K. Doumbia", "R. Del Castillo", "R. Del Castillo",
+                        "M. Baldé", "M. Baldé"],
+            "PSG": ["A. Hakimi", "N. Mendes", "Marquinhos", "W. Pacho", "W. Zaïre-Emery",
+                        "J. Neves", "Vitinha", "O. Dembélé", "O. Dembélé", "O. Dembélé",
+                        "B. Barcola", "B. Barcola", "K. Kvaratskhelia", "K. Kvaratskhelia", "D. Doué",
+                        "D. Doué", "D. Doué"],
+            "MAN CITY": ["M. Nunes", "R. Dias", "J. Stones", "J. Gvardiol", "Rodri",
+                        "T. Reijnders", "O. Marmoush", "O. Marmoush", "O. Marmoush", "J. Doku",
+                        "J. Doku", "Sávio","Sávio", "E. Haaland", "E. Haaland", "E. Haaland"],
+            "MAN UNITED": ["M. De Ligt", "L. Martinez", "L. Yoro", "D. Dalot", "M. Ugarte",
+                        "K. Mainoo", "B. Fernandes","B. Fernandes","B. Fernandes", "M. Mount",
+                        "B. Šeško", "B. Šeško", "B. Mbeumo", "B. Mbeumo", "M. Cunha", "M. Cunha"],
+            "TOTTENHAM": ["P. Porro", "C. Romero", "M. van de Ven", "D. Udogie", "P. M. Sarr",
+                        "Y. Bissouma", "J. Maddison", "D. Kulesevski", "D. Kulesevski",
+                        "D. Kulesevski", "B. Johnson", "B. Johnson", "M. Tel", "M. Tel"],
+            "REAL MADRID": ["D. Carvajal", "R. Asensio", "D. Huijsen", "T. Alexander-Arnold",
+                        "A. Tchouameni","F. Valverde", "J. Bellingham", "J. Bellingham", 
+                        "G. García", "G. García", "V. Junior", "V. Junior", "V. Junior", 
+                        "K. Mbappe", "K. Mbappe","K. Mbappe"],
+            "BARCELONA": ["A. Balde", "R. Araujo", "J. Kounde", "P. Cubarsí", "Pedri",
+                        "F. De Jong", "Raphinha", "L. Yamal", "L. Yamal", "L. Yamal", "D. Olmo",
+                        "D. Olmo", "R. Lewandowski", "R. Lewandowski", "M. Rashford", "M. Rashford"],
+            "BAYERN MUNICH": ["A. Davies", "D. Upamecano", "M. Kim", "R. Guerreiro", "J. Kimmich",
+                        "L. Goretzka", "K. Coman", "K. Coman", "L. Diaz", "L. Diaz",
+                        "J. Musiala", "J. Musiala", "J. Musiala", "M. Olise", "M. Olise", "M. Olise",
+                        "H. Kane", "H. Kane", "H. Kane", "H. Kane"],
+            "LIVERPOOL": ["V. Van Dijk", "M. Kerkez", "I. Konaté", "J. Frimpong",
+                         "A. Mac Allister", "R. Gravenberch", "D. Szoboszlai", "F. Wirtz",
+                         "F. Wirtz", "M. Salah", "M. Salah", "H. Ekitike", "H. Ekitike", "A. Isak", "A. Isak"],
+            "DORTMUND": ["N. Süle", "N. Schlotterbeck", "J. Ryerson", "W. Anton", "E. Can", "J. Bellingham",
+                        "J. Bellingham", "P. Groß", "J. Brandt", "J. Brandt", "J. Brandt", "M. Sabitzer",
+                        "K. Adeyemi", "K. Adeyemi", "K. Adeyemi", "S. Guirassy", "S. Guirassy"],
+            "ARSENAL": ["B. White", "W. Saliba", "G. Magalhães", "R. Calafiori", "M. Ødegaard",
+                        "D. Rice", "M. Zubimendi", "G. Martinelli", "G. Martinelli", "B. Saka",
+                        "B. Saka", "B. Saka", "K. Havertz", "K. Havertz", "V. Gyökeres", "V. Gyökeres",
+                        "V. Gyökeres"],
+            "CHELSEA": ["A. Disasi", "L. Colwill", "R. James", "M. Cucurella", "R. Lavia",
+                        "M. Caicedo", "E. Fernandez", "J. Pedro", "J. Pedro", "Estêvão",
+                        "L. Delap", "C. Palmer", "C. Palmer", "C. Palmer"],
+            "NEWCASTLE": ["K. Trippier", "E. Krafth", "L. Kelly", "D. Burn", "S. Longstaff",
+                        "B. Guimarães", "S. Tonali", "Joelinton", "A. Gordon", "H. Barnes",
+                        "H. Barnes", "N. Woltemade", "N. Woltemade", "N. Woltemade"],
+            "AC MILAN": ["M. Thiaw", "F. Tomori", "S. Pavlović", "S. Ricci", "Y. Fofana",
+                        "N. Okafor", "N. Okafor", "C. Pulisic", "C. Pulisic", "C. Pulisic",
+                        "R. Loftus-Cheek","R. Loftus-Cheek", "S. Giménez", "S. Giménez",
+                        "R. Leão", "R. Leão", "R. Leão", "L. Modric", "L. Modric"],
+            "INTER MILAN": ["A. Bastoni", "F. Acerbi", "B. Pavard", "M. Darmian", "N. Barella",
+                        "H. Çalhanoğlu", "H. Mkhitaryan", "F. Dimarco", "M. Thuram", "M. Thuram",
+                         "M. Thuram", "L. Martinez", "L. Martinez", "L. Martinez"],
+            "JUVENTUS": ["F. Gatti", "G. Bremer", "J. Cabal", "N. Savona", "N. Fagioli",
+                        "M. Locatelli", "F. Conceição", "K. Yildiz", "J. David", "J. David",
+                        "D. Vlahović", "D. Vlahović"],
+            "NAPOLI": ["G. Di Lorenzo", "A. Rrahmani", "A. Buoniorno", "M. Olivera",
+                        "A. Anguissa", "S. Lobotka", "S. McTominay", "S. McTominay", "M. Politano",
+                        "G. Raspadori", "G. Raspadori", "K. De Bruyne",
+                        "R. Lukaku", "R. Lukaku", "R. Lukaku"],
+            "LEVERKUSEN": ["E. Tapsoba", "J. Quansah", "P. Hincapié", "P. Schick", "E. Palacios",
+                        "A. Tape", "A. Grimaldo", "R. Andrich", "N. Tella", "N. Tella", "J. Hofmann",
+                        "V. Boniface", "V. Boniface", "V. Boniface", "V. Boniface"],
+            "RB LEIPZIG": ["C. Lukeba", "E. C. Bitshiabu", "L. Klostermann", "B. Henrichs",
+                        "A. Haidara", "K. Kampl", "D. Raum", "X. Simons",
+                        "X. Simons", "L. Openda", "L. Openda", "L. Openda"],
+            "ATLÉTICO MADRID": ["C. Lenglet", "M. Ruggeri", "R. Le Normand", "M. Llorente",
+                        "C. Gallagher", "G. Simeone", "Koke", "A. Sørloth", "A. Sørloth",
+                        "A. Griezmann", "A. Griezmann", "J. Alvarez", "J. Alvarez", "J. Alvarez"],
+            "SEVILLA": ["A. Pedrosa", "L. Badé", "N. Gudelj", "J. A. Carmona", "Saúl", "D. Sow",
+                        "A. Sambi Lokonga", "C. Ejuke", "C. Ejuke", "D. Lukebakio", "D. Lukebakio",
+                        "K. Iheanacho", "K. Iheanacho"],
+
+            
+
+            //Team 2
+            "BENFICA 2": ["N. Otamendi", "A. Silva", "A. Carreras", "T. Araújo", "O. Kökçü", "F. Luís",
+                        "S. Dahl", "Bruma", "M. Aktürkoğlu", "M. Aktürkoğlu", "E. Pavlidis", "E. Pavlidis",
+                        "E. Pavlidis", "E. Pavlidis"],
+            "PORTO 2": ["I. Marcano","S. Eustáquio", "N. Pérez", "A. Varela", "F. Vieira", "F. Moura",
+                        "R. Mora","R. Mora", "G. Veiga","G. Veiga", "S. Omorodion","S. Omorodion",
+                        "S. Omorodion", "Pepê", "Pepê", "Pepê", "Pepê"],
+            "ATHLETIC CLUB 2": ["A. Gorosabel", "D. Vivian","Y. Álvarez", "Y. Berchiche", "G. Guruzeta",
+                        "M. Jauregizar", "U. Gómez", "I. Williams", "I. Williams", "A. Berenguer",
+                        "A. Berenguer", "N. Williams", "N. Williams", "N. Williams", "N. Williams"],
+            "FIORENTINA 2": ["P. Comuzzo", "P. Marí", "L. Ranieri", "Dodô", "R. Mandragora",
+                        "A. Richardson", "N. Fagioli", "R. Gosens", "L. Beltrán", "L. Beltrán",
+                        "M. Kean", "M. Kean", "M. Kean", "M. Kean"],
+            "ICONS 2": ["P. Maldini", "A. Nesta", "Cafu", "Pelé", "Pelé", "Xavi", "Gullit",
+                     "Z. Zidane", "D. Maradona", "Ronaldinho", "L. Messi", "L. Messi",
+                     "Ronaldinho", "C. Ronaldo", "C. Ronaldo"],
+            "CHICKEN 2": ["Hector Chicken", "Gustavo Chicken", "Indeed Mustard Chicken",
+                        "LPH Chicken", "Charles the Chicken", "KFC Chicken", "Popeyes Chicken",
+                        "Of course my Chicken", "Father Chicken", "Father Chicken",
+                        "KFC Chicken", "Indeed Mustard Chicken", "Indeed Mustard Chicken"],
+            "ATALANTA 2": ["S. Posch", "B. Djimsiti", "S. Kolašinac", "R. Bellanova", "M. de Roon",
+                        "M. Pašilić", "D. Zappacosta", "C. De Ketelaere", "C. De Ketelaere",
+                        "M. Retegui", "M. Retegui", "M. Retegui", "A. Lookman", "A. Lookman",
+                        "A. Lookman"],
+            "S.S. LAZIO 2": ["M. Lazzari", "S. Gigot", "A. Romagnoli", "L. Pellegrini", "M. Guendouzi",
+                        "N. Rovella", "M. Zaccagni", "B. Dia", "G. Isaksen", "G. Isaksen", 
+                        "L. Tchaouna", "L. Tchaouna"],
+            "ROMA 2": ["E. Ndicka", "G. Mancini", "M. Z. Çelik", "J. Tasende", "L. Paredes",
+                        "M. Koné", "S. El Shaarawy", "L. Pellegrini", "L. Pellegrini", 
+                        "E. Shomurodov", "P. Dybala", "P. Dybala", "P. Dybala", "P. Dybala"],
+            "SPORTING CP 2": ["E. Quaresma", "O. Diomande", "J. St. Juste", "M. Reis", "G. Catamo",
+                        "M. Hjulmand", "H. Morita", "G. Quenda", "F. Trincão", "F. Trincão",
+                        "C. Harder", "C. Harder"],
+            "ASTON VILLA 2": ["M. Cash", "E. Konsa", "T. Mings", "I. Maatsen", "J. McGinn", "Y. Tielemans",
+                        "D. Malen", "L. Bailey", "J. Ramsey", "J. Ramsey", "E. Buendia", 
+                        "E. Buendia", "O. Watkins", "O. Watkins", "O. Watkins"],
+            "MARSEILLE 2": ["M. Murillo", "L. Balerdi", "D. Cornelius", "L. Henrique", "V. Rongier",
+                        "P. Højbjerg", "Q. Merlin", "B. Nadir", "A. Rabiot", "A. Rabiot", 
+                        "M. Greenwood", "M. Greenwood", "M. Greenwood"],
+            "MONACO 2": ["Vanderson", "T. Kehrer", "C. Mawissa", "C. Henrique", "M. Akliouche",
+                        "D. Zakaria", "S. Magassa", "T. Minamino", "T. Minamino", "T. Minamino",
+                        "M. Biereth", "B. Embolo", "B. Embolo"],
+            "BREST 2": ["J. Le Cardinal", "B. Chardonnet", "A. Ndiaye", "M. Haïdara", "E. Fernandes",
+                        "M. Camara", "H. Magnetti", "K. Doumbia", "R. Del Castillo", "R. Del Castillo",
+                        "M. Baldé", "M. Baldé"],
+            "PSG 2": ["A. Hakimi", "N. Mendes", "Marquinhos", "W. Pacho", "W. Zaïre-Emery",
+                        "J. Neves", "Vitinha", "O. Dembélé", "O. Dembélé", "O. Dembélé",
+                        "B. Barcola", "B. Barcola", "K. Kvaratskhelia", "K. Kvaratskhelia", "D. Doué",
+                        "D. Doué", "D. Doué"],
+            "MAN CITY 2": ["M. Nunes", "R. Dias", "J. Stones", "J. Gvardiol", "Rodri",
+                        "T. Reijnders", "O. Marmoush", "O. Marmoush", "O. Marmoush", "J. Doku",
+                        "J. Doku", "Sávio","Sávio", "E. Haaland", "E. Haaland", "E. Haaland"],
+            "MAN UNITED 2": ["M. De Ligt", "L. Martinez", "L. Yoro", "D. Dalot", "M. Ugarte",
+                        "K. Mainoo", "B. Fernandes","B. Fernandes","B. Fernandes", "M. Mount",
+                        "B. Šeško", "B. Šeško", "B. Mbeumo", "B. Mbeumo", "M. Cunha", "M. Cunha"],
+            "TOTTENHAM 2": ["P. Porro", "C. Romero", "M. van de Ven", "D. Udogie", "P. M. Sarr",
+                        "Y. Bissouma", "J. Maddison", "D. Kulesevski", "D. Kulesevski",
+                        "D. Kulesevski", "B. Johnson", "B. Johnson", "M. Tel", "M. Tel"],
+            "REAL MADRID 2": ["D. Carvajal", "R. Asensio", "D. Huijsen", "T. Alexander-Arnold",
+                        "A. Tchouameni","F. Valverde", "J. Bellingham", "J. Bellingham", 
+                        "G. García", "G. García", "V. Junior", "V. Junior", "V. Junior", 
+                        "K. Mbappe", "K. Mbappe","K. Mbappe"],
+            "BARCELONA 2": ["A. Balde", "R. Araujo", "J. Kounde", "P. Cubarsí", "Pedri",
+                        "F. De Jong", "Raphinha", "L. Yamal", "L. Yamal", "L. Yamal", "D. Olmo",
+                        "D. Olmo", "R. Lewandowski", "R. Lewandowski", "M. Rashford", "M. Rashford"],
+            "BAYERN MUNICH 2": ["A. Davies", "D. Upamecano", "M. Kim", "R. Guerreiro", "J. Kimmich",
+                        "L. Goretzka", "K. Coman", "K. Coman", "L. Diaz", "L. Diaz",
+                        "J. Musiala", "J. Musiala", "J. Musiala", "M. Olise", "M. Olise", "M. Olise",
+                        "H. Kane", "H. Kane", "H. Kane", "H. Kane"],
+            "LIVERPOOL 2": ["V. Van Dijk", "M. Kerkez", "I. Konaté", "J. Frimpong",
+                         "A. Mac Allister", "R. Gravenberch", "D. Szoboszlai", "F. Wirtz",
+                         "F. Wirtz", "M. Salah", "M. Salah", "H. Ekitike", "H. Ekitike", "A. Isak", "A. Isak"],
+            "DORTMUND 2": ["N. Süle", "N. Schlotterbeck", "J. Ryerson", "W. Anton", "E. Can", "J. Bellingham",
+                        "J. Bellingham", "P. Groß", "J. Brandt", "J. Brandt", "J. Brandt", "M. Sabitzer",
+                        "K. Adeyemi", "K. Adeyemi", "K. Adeyemi", "S. Guirassy", "S. Guirassy"],
+            "ARSENAL 2": ["B. White", "W. Saliba", "G. Magalhães", "R. Calafiori", "M. Ødegaard",
+                        "D. Rice", "M. Zubimendi", "G. Martinelli", "G. Martinelli", "B. Saka",
+                        "B. Saka", "B. Saka", "K. Havertz", "K. Havertz", "V. Gyökeres", "V. Gyökeres",
+                        "V. Gyökeres"],
+            "CHELSEA 2": ["A. Disasi", "L. Colwill", "R. James", "M. Cucurella", "R. Lavia",
+                        "M. Caicedo", "E. Fernandez", "J. Pedro", "J. Pedro", "Estêvão",
+                        "L. Delap", "C. Palmer", "C. Palmer", "C. Palmer"],
+            "NEWCASTLE 2": ["K. Trippier", "E. Krafth", "L. Kelly", "D. Burn", "S. Longstaff",
+                        "B. Guimarães", "S. Tonali", "Joelinton", "A. Gordon", "H. Barnes",
+                        "H. Barnes", "N. Woltemade", "N. Woltemade", "N. Woltemade"],
+            "AC MILAN 2": ["M. Thiaw", "F. Tomori", "S. Pavlović", "S. Ricci", "Y. Fofana",
+                        "N. Okafor", "N. Okafor", "C. Pulisic", "C. Pulisic", "C. Pulisic",
+                        "R. Loftus-Cheek","R. Loftus-Cheek", "S. Giménez", "S. Giménez",
+                        "R. Leão", "R. Leão", "R. Leão", "L. Modric", "L. Modric"],
+            "INTER MILAN 2": ["A. Bastoni", "F. Acerbi", "B. Pavard", "M. Darmian", "N. Barella",
+                        "H. Çalhanoğlu", "H. Mkhitaryan", "F. Dimarco", "M. Thuram", "M. Thuram",
+                         "M. Thuram", "L. Martinez", "L. Martinez", "L. Martinez"],
+            "JUVENTUS 2": ["F. Gatti", "G. Bremer", "J. Cabal", "N. Savona", "N. Fagioli",
+                        "M. Locatelli", "F. Conceição", "K. Yildiz", "J. David", "J. David",
+                        "D. Vlahović", "D. Vlahović"],
+            "NAPOLI 2": ["G. Di Lorenzo", "A. Rrahmani", "A. Buoniorno", "M. Olivera",
+                        "A. Anguissa", "S. Lobotka", "S. McTominay", "S. McTominay", "M. Politano",
+                        "G. Raspadori", "G. Raspadori", "K. De Bruyne",
+                        "R. Lukaku", "R. Lukaku", "R. Lukaku"],
+            "LEVERKUSEN 2": ["E. Tapsoba", "J. Quansah", "P. Hincapié", "P. Schick", "E. Palacios",
+                        "A. Tape", "A. Grimaldo", "R. Andrich", "N. Tella", "N. Tella", "J. Hofmann",
+                        "V. Boniface", "V. Boniface", "V. Boniface", "V. Boniface"],
+            "RB LEIPZIG 2": ["C. Lukeba", "E. C. Bitshiabu", "L. Klostermann", "B. Henrichs",
+                        "A. Haidara", "K. Kampl", "D. Raum", "X. Simons",
+                        "X. Simons", "L. Openda", "L. Openda", "L. Openda"],
+            "ATLÉTICO MADRID 2": ["C. Lenglet", "M. Ruggeri", "R. Le Normand", "M. Llorente",
+                        "C. Gallagher", "G. Simeone", "Koke", "A. Sørloth", "A. Sørloth",
+                        "A. Griezmann", "A. Griezmann", "J. Alvarez", "J. Alvarez", "J. Alvarez"],
+            "SEVILLA 2": ["A. Pedrosa", "L. Badé", "N. Gudelj", "J. A. Carmona", "Saúl", "D. Sow",
+                        "A. Sambi Lokonga", "C. Ejuke", "C. Ejuke", "D. Lukebakio", "D. Lukebakio",
+                        "K. Iheanacho", "K. Iheanacho"]
+        };
+
+        // Initialize the game
+        function initGame() {
+            // Get team names
+            const presetTeam1 = document.getElementById('preset-team1').value;
+            const customTeam1 = document.getElementById('custom-team1').value;
+            gameState.team1.name = customTeam1 || presetTeam1;
+            
+            const presetTeam2 = document.getElementById('preset-team2').value;
+            const customTeam2 = document.getElementById('custom-team2').value;
+            gameState.team2.name = customTeam2 || presetTeam2;
+            
+            // Handle same team names
+            if (gameState.team1.name === gameState.team2.name) {
+                gameState.team2.name += " 2";
+            }
+            
+            // Get players for each team
+            gameState.team1.players = teamPlayers[gameState.team1.name] || Array(10).fill().map((_, i) => `${gameState.team1.name} Player ${i+1}`);
+            gameState.team2.players = teamPlayers[gameState.team2.name] || Array(10).fill().map((_, i) => `${gameState.team2.name} Player ${i+1}`);
+            
+            // Get game settings
+            gameState.strength = parseInt(document.getElementById('strength').value);
+            gameState.isLive = document.querySelector('input[name="sim-mode"]:checked').value === 'live';
+            gameState.isImmediate = !gameState.isLive;
+            gameState.isTwoLegs = document.getElementById('two-legs').checked;
+            gameState.isLeg2 = false;
+            gameState.matchEnded = false;
+            
+            if (gameState.isTwoLegs) {
+                gameState.leg1Score.team1 = parseInt(document.getElementById('leg1-team1').value) || 0;
+                gameState.leg1Score.team2 = parseInt(document.getElementById('leg1-team2').value) || 0;
+            }
+            
+            // Calculate extra time
+            calculateExtraTime();
+            
+            // Reset game state
+            gameState.time = 0;
+            gameState.team1.score = 0;
+            gameState.team2.score = 0;
+            gameState.events = [];
+            gameState.isExtraTime = false;
+            gameState.isPenalties = false;
+            gameState.penalties = { team1: 0, team2: 0, shots: [] };
+            
+            // Reset stats
+            gameState.stats = {
+                shots: { team1: 0, team2: 0 },
+                shotsOnTarget: { team1: 0, team2: 0 },
+                possession: { 
+                    team1: Math.floor(Math.random() * 41) + 30, // Random between 30-70
+                    get team2() {
+                        return 100 - this.team1;
+                    }
+                 }
+            };
+            
+            // Update UI
+            updateUI();
+            
+            // Add initial event
+            if (gameState.isLeg2) {
+                addLogEntry("Leg 2 started!");
+            } else {
+                addLogEntry("Match started!");
+            }
+            
+            if (gameState.isTwoLegs && gameState.leg1Score.team1 + gameState.leg1Score.team2 > 0) {
+                addLogEntry(`Leg 1: ${gameState.team1.name} ${gameState.leg1Score.team1}-${gameState.leg1Score.team2} ${gameState.team2.name}`);
+                updateAggregateDisplay();
+            }
+            
+            // Start simulation based on mode
+            if (gameState.isImmediate) {
+                simulateFullMatch();
+            } else {
+                simulateLive();
+            }
+        }
+
+        function updateAggregateDisplay() {
+            if (gameState.isTwoLegs) {
+                const aggTeam1 = gameState.team1.score + gameState.leg1Score.team1;
+                const aggTeam2 = gameState.team2.score + gameState.leg1Score.team2;
+                elements.aggregateDisplay.textContent = `Aggregate: ${gameState.team1.name} ${aggTeam1}-${aggTeam2} ${gameState.team2.name}`;
+            } else {
+                elements.aggregateDisplay.textContent = '';
+            }
+        }
+
+        function updateMatchStatus() {
+            if (gameState.matchEnded) {
+                if (gameState.time >= 120) {
+                    elements.matchStatus.textContent = "AET";
+                } else {
+                    elements.matchStatus.textContent = "FT";
+                }
+                elements.gameTime.classList.add('hidden');
+                elements.matchStatus.classList.remove('hidden');
+            } else {
+                elements.gameTime.classList.remove('hidden');
+                elements.matchStatus.classList.add('hidden');
+            }
+        }
+
+        function calculateExtraTime() {
+            // First half added time (45+)
+            gameState.extraTime.firstHalf = 45 + (Math.random() < 0.8 ? 
+                Math.floor(Math.random() * 7) + 1 : 
+                Math.floor(Math.random() * 8) + 5);
+            
+            // Second half added time (90+)
+            gameState.extraTime.secondHalf = 90 + (Math.random() < 0.5 ? 
+                Math.floor(Math.random() * 6) + 1 : 
+                Math.random() < 0.7 ? 
+                    Math.floor(Math.random() * 5) + 5 : 
+                    Math.random() < 0.9 ? 
+                        Math.floor(Math.random() * 4) + 7 : 
+                        Math.floor(Math.random() * 6) + 9);
+            
+            // First extra time half added time (105+)
+            gameState.extraTime.firstExtra = 105 + (Math.random() < 0.8 ? 
+                Math.floor(Math.random() * 3) + 1 : 
+                Math.floor(Math.random() * 3) + 3);
+            
+            // Second extra time half added time (120+)
+            gameState.extraTime.secondExtra = 120 + (Math.random() < 0.5 ? 
+                Math.floor(Math.random() * 2) + 1 : 
+                Math.random() < 0.86 ? 
+                    Math.floor(Math.random() * 3) + 2 : 
+                    Math.floor(Math.random() * 3) + 4);
+        }
+
+        function updateUI() {
+            elements.team1Name.textContent = gameState.team1.name;
+            elements.team2Name.textContent = gameState.team2.name;
+            elements.team1Score.textContent = gameState.team1.score;
+            elements.team2Score.textContent = gameState.team2.score;
+            elements.eventsTeam1.textContent = gameState.team1.name;
+            elements.eventsTeam2.textContent = gameState.team2.name;
+            elements.penaltyTeam1.textContent = gameState.team1.name;
+            elements.penaltyTeam2.textContent = gameState.team2.name;
+            elements.statsTeam1.textContent = gameState.team1.name;
+            elements.statsTeam2.textContent = gameState.team2.name;
+            elements.gameTime.textContent = "0'";
+            elements.gameLog.innerHTML = "";
+            elements.eventsBody.innerHTML = "";
+            elements.penaltyBody.innerHTML = "";
+            elements.statsBody.innerHTML = "";
+            
+            updateAggregateDisplay();
+            updateMatchStatus();
+            
+            elements.penaltyShootout.classList.add('hidden');
+            elements.statsContainer.classList.add('hidden');
+            elements.leg2Button.classList.add('hidden');
+            elements.extraTimeButton.classList.add('hidden');
+            
+            // Show game screen
+            elements.setupScreen.classList.add('hidden');
+            elements.gameScreen.classList.remove('hidden');
+            
+            // Initialize team club based on strength
+            gameState.teamClub = [];
+            switch(gameState.strength) {
+                case 1:
+                    gameState.teamClub.push(...Array(5).fill(gameState.team1.name));
+                    gameState.teamClub.push(...Array(1).fill(gameState.team2.name));
+                    break;
+                case 2:
+                    gameState.teamClub.push(...Array(5).fill(gameState.team1.name));
+                    gameState.teamClub.push(...Array(2).fill(gameState.team2.name));
+                    break;
+                case 3:
+                    gameState.teamClub.push(...Array(4).fill(gameState.team1.name));
+                    gameState.teamClub.push(...Array(3).fill(gameState.team2.name));
+                    break;
+                case 4:
+                    gameState.teamClub.push(gameState.team1.name);
+                    gameState.teamClub.push(gameState.team2.name);
+                    break;
+                case 5:
+                    gameState.teamClub.push(...Array(3).fill(gameState.team1.name));
+                    gameState.teamClub.push(...Array(4).fill(gameState.team2.name));
+                    break;
+                case 6:
+                    gameState.teamClub.push(...Array(2).fill(gameState.team1.name));
+                    gameState.teamClub.push(...Array(5).fill(gameState.team2.name));
+                    break;
+                case 7:
+                    gameState.teamClub.push(...Array(1).fill(gameState.team1.name));
+                    gameState.teamClub.push(...Array(5).fill(gameState.team2.name));
+                    break;
+            }
+        }
+
+        // Simulate the full match immediately
+        function simulateFullMatch() {
+            gameState.isSimulating = true;
+            
+            // Simulate first half
+            while (gameState.time < 45) {
+                simulateMinute();
+            }
+            
+            // first half stoppage time
+            while (gameState.time < gameState.extraTime.firstHalf) {
+                simulateMinute();
+            }
+            
+            // Half-time
+            addLogEntry("Half time");
+            gameState.time = 45;
+            gameState.extraTime.firstHalf = 0;
+            
+            // Simulate second half
+            while (gameState.time < 90) {
+                simulateMinute();
+            }
+            
+            // second half stoppage time
+            while (gameState.time < gameState.extraTime.secondHalf) {
+                simulateMinute();
+            }
+            
+            // Full-time
+            addLogEntry("Full time");
+            gameState.matchEnded = true;
+            updateMatchStatus();
+            
+            // Check match end
+            checkMatchEnd();
+            
+            gameState.isSimulating = false;
+        }
+
+        // Simulate match live
+        function simulateLive() {
+            clearExistingIntervals();
+
+            gameState.isSimulating = true;
+            gameState.simulationInterval = setInterval(() => {
+                simulateMinute();
+                
+                // Check if we've reached the end of first half (45 minutes)
+                if (gameState.time === 45) {
+                    // First half ended, add stoppage time
+                    clearInterval(gameState.simulationInterval);
+                    gameState.simulationInterval = setInterval(() => {
+                        simulateMinute();
+                        if (gameState.time >= gameState.extraTime.firstHalf) {
+                            clearInterval(gameState.simulationInterval);
+                            addLogEntry("Half time");
+                            
+                            // Reset time to 45 for the second half
+                            gameState.time = 45;
+                            gameState.extraTime.firstHalf = 0;
+
+                            setTimeout(() => {
+                                gameState.simulationInterval = setInterval(() => {
+                                    simulateMinute();
+                                    if (gameState.time >= 90) {
+                                        clearInterval(gameState.simulationInterval);
+                                        // Second half ended, add stoppage time
+                                        gameState.simulationInterval = setInterval(() => {
+                                            simulateMinute();
+                                            if (gameState.time >= gameState.extraTime.secondHalf) {
+                                                clearInterval(gameState.simulationInterval);
+                                                addLogEntry("Full time");
+                                                
+                                                
+                                                gameState.matchEnded = true;
+                                                updateMatchStatus();
+                                                checkMatchEnd();
+                                            }
+                                        }, 750);
+                                    }
+                                }, 750);
+                            }, 1500);
+                        }
+                    }, 750);
+                }
+            }, 750);
+        }
+
+        // Simulate one minute of game time
+        function simulateMinute() {
+            gameState.time += 1;
+    
+            // Update game time display
+            let displayTime;
+            let timeString;
+            
+            if (gameState.time <= 45) {
+                // First half
+                displayTime = gameState.time;
+                timeString = `${displayTime}'`;
+            } else if (gameState.time <= gameState.extraTime.firstHalf) {
+                // First half stoppage time
+                displayTime = gameState.time - 45;
+                timeString = `45+${displayTime}'`;
+            } else if (gameState.time <= 90) {
+                // Second half (resets to 45 after first half stoppage)
+                displayTime = gameState.time - 45;
+                timeString = `${45 + displayTime}'`;
+            } else if (gameState.time <= gameState.extraTime.secondHalf) {
+                // Second half stoppage time
+                displayTime = gameState.time - 90;
+                timeString = `90+${displayTime}'`;
+            } else if (gameState.isExtraTime && gameState.time <= 105) {
+                // First half of extra time
+                displayTime = gameState.time;
+                timeString = `${displayTime}'`;
+            } else if (gameState.isExtraTime && gameState.time <= gameState.extraTime.firstExtra) {
+                // First half extra time stoppage
+                displayTime = gameState.time - 105;
+                timeString = `105+${displayTime}'`;
+            } else if (gameState.isExtraTime && gameState.time <= 120) {
+                // Second half of extra time
+                displayTime = gameState.time - 105;
+                timeString = `${105 + displayTime}'`;
+            } else if (gameState.isExtraTime) {
+                // Second half extra time stoppage
+                displayTime = gameState.time - 120;
+                timeString = `120+${displayTime}'`;
+            }
+            
+            elements.gameTime.textContent = timeString;
+
+            // Only track shots if not in penalty shootout
+            if (!gameState.isPenalties) {
+                // Random shots during normal time (base probability)
+                if (!gameState.isExtraTime) {
+                    // Home team random shot chance (10% per minute)
+                    if (Math.random() < 0.10) {
+                        gameState.stats.shots.team1++;
+                        // 50% chance shot is on target
+                        if (Math.random() < 0.5) {
+                            gameState.stats.shotsOnTarget.team1++;
+                        }
+                    }
+                    
+                    // Away team random shot chance (10% per minute)
+                    if (Math.random() < 0.10) {
+                        gameState.stats.shots.team2++;
+                        // 50% chance shot is on target
+                        if (Math.random() < 0.5) {
+                            gameState.stats.shotsOnTarget.team2++;
+                        }
+                    }
+                }
+                
+                // Additional random shots during extra time
+                if (gameState.isExtraTime) {
+                    // Home team extra time shot chance (15% per minute)
+                    if (Math.random() < 0.15) {
+                        gameState.stats.shots.team1++;
+                        // 50% chance shot is on target
+                        if (Math.random() < 0.5) {
+                            gameState.stats.shotsOnTarget.team1++;
+                        }
+                    }
+                    
+                    // Away team extra time shot chance (15% per minute)
+                    if (Math.random() < 0.15) {
+                        gameState.stats.shots.team2++;
+                        // 50% chance shot is on target
+                        if (Math.random() < 0.5) {
+                            gameState.stats.shotsOnTarget.team2++;
+                        }
+                    }
+                }
+            }
+
+            // Original goal scoring logic (unchanged)
+            let rand1, rand2, og1, og2, pen1, pen2;
+            
+            if (gameState.strength === 1 || gameState.strength === 7) {
+                rand1 = Math.floor(Math.random() * 16);
+                rand2 = Math.floor(Math.random() * 16);
+                og1 = Math.floor(Math.random() * 21);
+                og2 = Math.floor(Math.random() * 31) + 15;
+            } else {
+                rand1 = Math.floor(Math.random() * 26);
+                rand2 = Math.floor(Math.random() * 26);
+                og1 = Math.floor(Math.random() * 21);
+                og2 = Math.floor(Math.random() * 31) + 10;
+            }
+            
+            pen1 = Math.floor(Math.random() * 6) + 5;
+            pen2 = Math.floor(Math.random() * 6) + 5;
+            
+            const penalty = pen1 === pen2 ? " (P)" : "";
+            
+            if (rand1 === rand2) {
+                const randClub = gameState.teamClub[Math.floor(Math.random() * gameState.teamClub.length)];
+                
+                if (og1 !== og2) {
+                    // Normal goal
+                    if (randClub === gameState.team1.name) {
+                        gameState.stats.shots.team1++;
+                        gameState.stats.shotsOnTarget.team1++;
+
+                        gameState.team1.score += 1;
+
+                        const randScorer = gameState.team1.players[Math.floor(Math.random() * gameState.team1.players.length)];
+                        addEvent(timeString, `${randScorer}${penalty}`, "");
+                        addLogEntry(`${gameState.team1.name} scores! ${randScorer}${penalty}`);
+
+                    } else if (randClub === gameState.team2.name) {
+                        gameState.stats.shots.team2++;
+                        gameState.stats.shotsOnTarget.team2++;
+
+                        gameState.team2.score += 1;
+                        
+                        const randScorer = gameState.team2.players[Math.floor(Math.random() * gameState.team2.players.length)];
+                        addEvent(timeString, "", `${randScorer}${penalty}`);
+                        addLogEntry(`${gameState.team2.name} scores! ${randScorer}${penalty}`);
+                    }
+                } else {
+                    // Own goal
+                    if (randClub === gameState.team1.name) {
+                        gameState.team1.score += 1;
+                        
+                        const randScorer = gameState.team2.players[Math.floor(Math.random() * gameState.team2.players.length)];
+                        addEvent(timeString, `${randScorer} (OG)`, "");
+                        addLogEntry(`Own goal for ${gameState.team1.name}! ${randScorer} (OG)`);
+                    } else if (randClub === gameState.team2.name) {
+                        gameState.team2.score += 1;
+                        const randScorer = gameState.team1.players[Math.floor(Math.random() * gameState.team1.players.length)];
+                        addEvent(timeString, "", `${randScorer} (OG)`);
+                        addLogEntry(`Own goal for ${gameState.team2.name}! ${randScorer} (OG)`);
+                    }
+                }
+                
+                // Update score display
+                elements.team1Score.textContent = gameState.team1.score;
+                elements.team2Score.textContent = gameState.team2.score;
+                
+                if (gameState.isTwoLegs) {
+                    updateAggregateDisplay();
+                }
+            }
+        }
+
+        // Check if match should end
+        function checkMatchEnd() {
+            gameState.isSimulating = false;
+            
+            if (gameState.isExtraTime) {
+                // In extra time, check aggregate score if it's a two-leg tie
+                if (gameState.isTwoLegs) {
+                    const aggTeam1 = gameState.team1.score + gameState.leg1Score.team1;
+                    const aggTeam2 = gameState.team2.score + gameState.leg1Score.team2;
+
+                    if (aggTeam1 !== aggTeam2) {
+                        endMatch();
+                    } else {
+                        startPenaltyShootout(); // This was missing in the original code
+                    }
+                } 
+                // For single matches, check current score
+                else if (gameState.team1.score !== gameState.team2.score) {
+                    endMatch();
+                } else {
+                    startPenaltyShootout();
+                }
+            } else {
+                // Normal time
+                if (gameState.isTwoLegs) {
+                    const aggTeam1 = gameState.team1.score + gameState.leg1Score.team1;
+                    const aggTeam2 = gameState.team2.score + gameState.leg1Score.team2;
+                    
+                    if (aggTeam1 !== aggTeam2) {
+                        endMatch();
+                    } else {
+                        showPostMatchOptions();
+                    }
+                } else {
+                    if (gameState.team1.score !== gameState.team2.score) {
+                        endMatch();
+                    } else {
+                        showPostMatchOptions();
+                    }
+                }
+            }
+        }
+
+function startPenaltyShootout() {
+    gameState.isPenalties = true;
+    gameState.matchEnded = false;
+    elements.penaltyShootout.classList.remove('hidden');
+    addLogEntry("Penalty shootout started!");
+    
+    // Reset penalty scores
+    gameState.penalties = { team1: 0, team2: 0, shots: [] };
+    
+    // Simulate penalties
+    simulatePenaltyShootout();
+}
+
+function showPostMatchOptions() {
+    // Calculate stats (don't reset, just show current stats)
+    showStats();
+    
+    // Only show Leg 2 button if:
+    // 1. It's NOT already a two-leg tie AND
+    // 2. We're NOT already in Leg 2
+    if (!gameState.isTwoLegs && !gameState.isLeg2) {
+        elements.leg2Button.classList.remove('hidden');
+    }
+    
+    elements.extraTimeButton.classList.remove('hidden');
+}
+        function showPostMatchOptions() {
+            // Calculate stats (don't reset, just show current stats)
+            showStats();
+            
+            // Show appropriate buttons
+            const twoLegsCheckbox = document.getElementById('two-legs');
+            if (!twoLegsCheckbox.checked && !gameState.isLeg2) {
+                elements.leg2Button.classList.remove('hidden');
+            }
+            
+            elements.extraTimeButton.classList.remove('hidden');
+        }
+
+        // Start extra time
+        function startExtraTime() {
+            gameState.extraTime.secondHalf = 0;
+            gameState.time = 90;
+            gameState.isExtraTime = true;
+            gameState.matchEnded = false;
+            elements.extraTimeButton.classList.add('hidden');
+            addLogEntry("Extra time started!");
+
+            elements.gameTime.classList.remove('hidden');
+            elements.matchStatus.classList.add('hidden');
+            
+            if (gameState.isImmediate) {
+                // Simulate first half of extra time
+                while (gameState.time < 105) {
+                    simulateMinute();
+                }
+                
+                // Add first half stoppage time
+                while (gameState.time < gameState.extraTime.firstExtra) {
+                    simulateMinute();
+                }
+                
+                addLogEntry("Extra time half time");
+                gameState.time = 105;
+                gameState.extraTime.firstExtra = 0;
+                
+                // Simulate second half of extra time
+                while (gameState.time < 120) {
+                    simulateMinute();
+                }
+                
+                // Add second half stoppage time
+                while (gameState.time < gameState.extraTime.secondExtra) {
+                    simulateMinute();
+                }
+                
+                addLogEntry("Extra time full time");
+                gameState.matchEnded = true;
+                updateMatchStatus();
+                
+                // Check aggregate score for two-leg ties
+                if (gameState.isTwoLegs) {
+                    const aggTeam1 = gameState.team1.score + gameState.leg1Score.team1;
+                    const aggTeam2 = gameState.team2.score + gameState.leg1Score.team2;
+                    
+                    if (aggTeam1 !== aggTeam2) {
+                        endMatch();
+                    } else {
+                        startPenaltyShootout();
+                    }
+                } 
+                // For single matches, check current score
+                else if (gameState.team1.score !== gameState.team2.score) {
+                    endMatch();
+                } else {
+                    startPenaltyShootout();
+                }
+            } else {
+                simulateLiveExtraTime();
+            }
+        }
+
+        function simulateLiveExtraTime() {
+            clearExistingIntervals();
+            gameState.extraTime.secondHalf = 0;
+            gameState.time = 90;
+            gameState.isSimulating = true;
+
+            gameState.simulationInterval = setInterval(() => {
+                simulateMinute();
+                
+                if (gameState.time === 105) {
+                    // First half of extra time ended, add stoppage time
+                    clearInterval(gameState.simulationInterval);
+
+                    gameState.simulationInterval = setInterval(() => {
+                        simulateMinute();
+
+                        if (gameState.time >= gameState.extraTime.firstExtra) {
+                            clearInterval(gameState.simulationInterval);
+                            addLogEntry("Extra time half time");
+                            
+                            // Reset time to 105 for the second half of extra time
+                            gameState.time = 105;
+                            gameState.extraTime.firstExtra = 0;
+
+                            setTimeout(() => {
+                                gameState.simulationInterval = setInterval(() => {
+                                    simulateMinute();
+                                    if (gameState.time >= 120) {
+                                        clearInterval(gameState.simulationInterval);
+                                        // Second half ended, add stoppage time
+                                        gameState.simulationInterval = setInterval(() => {
+                                            simulateMinute();
+                                            if (gameState.time >= gameState.extraTime.secondExtra) {
+                                                clearInterval(gameState.simulationInterval);
+                                                addLogEntry("Extra time full time");
+                                                gameState.matchEnded = true;
+                                                updateMatchStatus();
+                                                
+                                                // Check aggregate score for two-leg ties
+                                                if (gameState.isTwoLegs) {
+                                                    const aggTeam1 = gameState.team1.score + gameState.leg1Score.team1;
+                                                    const aggTeam2 = gameState.team2.score + gameState.leg1Score.team2;
+                                                    
+                                                    if (aggTeam1 !== aggTeam2) {
+                                                        endMatch();
+                                                    } else {
+                                                        startPenaltyShootout();
+                                                    }
+                                                } 
+                                                // For single matches, check current score
+                                                else if (gameState.team1.score !== gameState.team2.score) {
+                                                    endMatch();
+                                                } else {
+                                                    startPenaltyShootout();
+                                                }
+                                            }
+                                        }, 750);
+                                    }
+                                }, 750);
+                            }, 1500);
+                        }
+                    }, 750);
+                }
+            }, 750);
+        }
+
+        // Start penalty shootout
+        function simulatePenaltyShootout() {
+            const penaltyDatabase = ['✓', '✗', '✓']; // Tick, cross, tick
+            
+            let currentRound = 0;
+            let currentTeam = 'home'; // Start with home team
+            const takenPenalties = [];
+
+            function processNextPenalty() {
+                if (gameState.matchEnded) return;
+
+                // Check if we should end BEFORE processing this penalty
+                if (checkForWinnerBeforePenalty()) {
+                    return;
+                }
+
+                const isTeam1 = currentTeam === 'home';
+                const team = isTeam1 ? gameState.team1 : gameState.team2;
+                const players = isTeam1 ? 
+                    [...new Set([...gameState.team1.players].reverse())] : 
+                    [...new Set([...gameState.team2.players].reverse())];
+                
+                const player = players[currentRound] || `${team.name} Player ${currentRound+1}`;
+                const result = penaltyDatabase[Math.floor(Math.random() * penaltyDatabase.length)];
+
+                // Record penalty
+                takenPenalties.push({
+                    round: currentRound + 1,
+                    team: currentTeam,
+                    player,
+                    result
+                });
+
+                // Update score
+                if (result === '✓') {
+                    isTeam1 ? gameState.penalties.team1++ : gameState.penalties.team2++;
+                }
+
+                // Update UI only (no log entries)
+                updatePenaltyDisplay();
+
+                // Check for winner AFTER the penalty
+                if (checkForWinnerAfterPenalty()) {
+                    return;
+                }
+
+                // Switch teams and potentially advance round
+                if (currentTeam === 'away') {
+                    currentRound++;
+                }
+                currentTeam = currentTeam === 'home' ? 'away' : 'home';
+
+                // Schedule next penalty
+                if (!gameState.matchEnded) {
+                    if (gameState.isLive) {
+                        setTimeout(processNextPenalty, 1500);
+                    } else {
+                        processNextPenalty();
+                    }
+                }
+            }
+
+            function updatePenaltyDisplay() {
+                elements.penaltyBody.innerHTML = '';
+                
+                // Group penalties by round
+                const rounds = {};
+                takenPenalties.forEach(pen => {
+                    if (!rounds[pen.round]) {
+                        rounds[pen.round] = { home: null, away: null };
+                    }
+                    rounds[pen.round][pen.team] = pen;
+                });
+
+                // Create table rows
+                Object.keys(rounds).sort().forEach(roundNum => {
+                    const round = rounds[roundNum];
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${roundNum}</td>
+                        <td>${round.home ? `${round.home.result} (${round.home.player})` : ''}</td>
+                        <td>${round.away ? `${round.away.result} (${round.away.player})` : ''}</td>
+                    `;
+                    
+                    elements.penaltyBody.appendChild(row);
+                });
+
+                // Add totals row
+                const totalRow = document.createElement('tr');
+                totalRow.innerHTML = `
+                    <td><strong>Total</strong></td>
+                    <td><strong>${gameState.penalties.team1}</strong></td>
+                    <td><strong>${gameState.penalties.team2}</strong></td>
+                `;
+                elements.penaltyBody.appendChild(totalRow);
+            }
+
+            function checkForWinnerBeforePenalty() {
+                const totalRounds = 5;
+                
+                const homeTaken = takenPenalties.filter(p => p.team === 'home').length;
+                const awayTaken = takenPenalties.filter(p => p.team === 'away').length;
+                
+                const homeRemaining = totalRounds - homeTaken;
+                const awayRemaining = totalRounds - awayTaken;
+                
+                // Check if the team about to shoot cannot possibly catch up
+                if (currentTeam === 'home') {
+                    // Home is about to shoot - check if away can't catch up
+                    if (gameState.penalties.team1 > gameState.penalties.team2 + awayRemaining) {
+                        endPenaltyShootout();
+                        return true;
+                    }
+                } else {
+                    // Away is about to shoot - check if home can't catch up  
+                    if (gameState.penalties.team2 > gameState.penalties.team1 + homeRemaining) {
+                        endPenaltyShootout();
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+
+            function checkForWinnerAfterPenalty() {
+                const totalRounds = 5;
+                
+                const homeTaken = takenPenalties.filter(p => p.team === 'home').length;
+                const awayTaken = takenPenalties.filter(p => p.team === 'away').length;
+                
+                const homeRemaining = totalRounds - homeTaken;
+                const awayRemaining = totalRounds - awayTaken;
+                
+                // Check if the team that just shot made the other team mathematically out
+                if (currentTeam === 'home') {
+                    // Home just shot - check if away can't catch up
+                    if (gameState.penalties.team1 > gameState.penalties.team2 + awayRemaining) {
+                        endPenaltyShootout();
+                        return true;
+                    }
+                } else {
+                    // Away just shot - check if home can't catch up
+                    if (gameState.penalties.team2 > gameState.penalties.team1 + homeRemaining) {
+                        endPenaltyShootout();
+                        return true;
+                    }
+                }
+                
+                // After all 5 rounds (each team has had 5 penalties), check if scores differ
+                if (homeTaken >= totalRounds && awayTaken >= totalRounds && gameState.penalties.team1 !== gameState.penalties.team2) {
+                    endPenaltyShootout();
+                    return true;
+                }
+                
+                return false;
+            }
+
+            function endPenaltyShootout() {
+                gameState.matchEnded = true;
+                endMatch();
+            }
+
+            // Start the penalty sequence
+            processNextPenalty();
+        }
+
+        function adjustFinalStats() {
+            // --- TEAM 1 ---
+            const goals1 = gameState.team1.score;
+
+            // Ensure shots on target >= goals
+            gameState.stats.shotsOnTarget.team1 = Math.max(
+                gameState.stats.shotsOnTarget.team1,
+                goals1
+            );
+
+            // Ensure total shots >= shots on target
+            gameState.stats.shots.team1 = Math.max(
+                gameState.stats.shots.team1,
+                gameState.stats.shotsOnTarget.team1
+            );
+
+            // --- TEAM 2 ---
+            const goals2 = gameState.team2.score;
+
+            // Ensure shots on target >= goals
+            gameState.stats.shotsOnTarget.team2 = Math.max(
+                gameState.stats.shotsOnTarget.team2,
+                goals2
+            );
+
+            // Ensure total shots >= shots on target
+            gameState.stats.shots.team2 = Math.max(
+                gameState.stats.shots.team2,
+                gameState.stats.shotsOnTarget.team2
+            );
+        }
+
+
+
+        // End the match
+        function endMatch() {
+            if (gameState.simulationInterval) {
+                clearInterval(gameState.simulationInterval);
+                gameState.simulationInterval = null;
+                gameState.isSimulating = false;
+            }
+            
+            gameState.matchEnded = true;
+            updateMatchStatus();
+            
+            // Show stats
+            adjustFinalStats();
+            showStats();
+            
+            // Show winner
+            let winner;
+            if (gameState.isPenalties) {
+                winner = gameState.penalties.team1 > gameState.penalties.team2 ? 
+                    gameState.team1.name : gameState.team2.name;
+                addLogEntry(`${winner} wins on penalties!`);
+            } else if (gameState.isTwoLegs) {
+                const aggTeam1 = gameState.team1.score + gameState.leg1Score.team1;
+                const aggTeam2 = gameState.team2.score + gameState.leg1Score.team2;
+                
+                if (aggTeam1 > aggTeam2) {
+                    winner = gameState.team1.name;
+                } else if (aggTeam2 > aggTeam1) {
+                    winner = gameState.team2.name;
+                }
+                
+                if (winner) {
+                    addLogEntry(`${winner} wins on aggregate ${aggTeam1}-${aggTeam2}!`);
+                }
+            } else {
+                if (gameState.team1.score > gameState.team2.score) {
+                    winner = gameState.team1.name;
+                } else if (gameState.team2.score > gameState.team1.score) {
+                    winner = gameState.team2.name;
+                }
+                
+                if (winner) {
+                    addLogEntry(`${winner} wins ${gameState.team1.score}-${gameState.team2.score}!`);
+                }
+            }
+            
+                if (!winner) {
+                    addLogEntry("Match ends on a draw.");
+                }
+        
+            
+            // Show leg 2 button if it's NOT a two-leg tie and we just played a single match
+            const twoLegsCheckbox = document.getElementById('two-legs');
+            if (!twoLegsCheckbox.checked && !gameState.isLeg2) {
+                elements.leg2Button.classList.remove('hidden');
+            }
+        }
+
+        // Show match statistics (without recalculating)
+        function showStats() {
+            elements.statsContainer.classList.remove('hidden');
+            elements.statsBody.innerHTML = "";
+            
+            const stats = [
+                ["Shots", gameState.stats.shots.team1, gameState.stats.shots.team2],
+                ["Shots on target", gameState.stats.shotsOnTarget.team1, gameState.stats.shotsOnTarget.team2],
+                ["Possession", `${gameState.stats.possession.team1}%`, `${gameState.stats.possession.team2}%`]
+            ];
+            
+            stats.forEach(stat => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${stat[0]}</td>
+                    <td>${stat[1]}</td>
+                    <td>${stat[2]}</td>
+                `;
+                elements.statsBody.appendChild(row);
+            });
+        }
+
+        // Add event to the events table
+        function addEvent(time, team1Event, team2Event) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${time}</td>
+                <td>${team1Event}</td>
+                <td>${team2Event}</td>
+            `;
+            elements.eventsBody.appendChild(row);
+            gameState.events.push({ time, team1Event, team2Event });
+        }
+
+        // Add log entry
+        function addLogEntry(message) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${elements.gameTime.textContent}] ${message}`;
+            elements.gameLog.prepend(entry);
+        }
+
+        // Event listeners
+        document.getElementById('start-game').addEventListener('click', initGame);
+        
+        document.getElementById('two-legs').addEventListener('change', function() {
+            document.getElementById('leg1-score').classList.toggle('hidden', !this.checked);
+        });
+        
+        document.getElementById('rematch').addEventListener('click', function() {
+            clearExistingIntervals();
+            // Reset scores, time, events, and penalties
+            gameState.team1.score = 0;
+            gameState.team2.score = 0;
+            gameState.time = 0;
+            gameState.events = [];
+            gameState.isExtraTime = false;
+            gameState.isPenalties = false;
+            gameState.penalties = { team1: 0, team2: 0, shots: [] };
+            gameState.matchEnded = false;
+            
+            // RESET stats (do not accumulate)
+            gameState.stats = {
+                shots: { team1: 0, team2: 0 },
+                shotsOnTarget: { team1: 0, team2: 0 },
+                possession: { 
+                    team1: Math.floor(Math.random() * 41) + 30, // Random between 30-70
+                    get team2() {
+                        return 100 - this.team1;
+                    }
+                 }
+            };
+            
+            // Recalculate extra time
+            calculateExtraTime();
+            
+            // Update UI
+            elements.team1Score.textContent = "0";
+            elements.team2Score.textContent = "0";
+            elements.gameTime.textContent = "0'";
+            elements.gameLog.innerHTML = "";
+            elements.eventsBody.innerHTML = "";
+            elements.penaltyShootout.classList.add('hidden');
+            elements.statsContainer.classList.add('hidden');
+            elements.extraTimeButton.classList.add('hidden');
+            
+            // Only hide Leg 2 button if we're already in Leg 2
+            if (gameState.isLeg2) {
+                elements.leg2Button.classList.add('hidden');
+            } else if (!gameState.isTwoLegs) {
+                elements.leg2Button.classList.remove('hidden');
+            }
+            if (gameState.extraTime) {
+                elements.leg2Button.classList.add('hidden');
+            }
+            
+            
+            
+            updateMatchStatus();
+            
+            // Add initial event
+            if (gameState.isLeg2) {
+                addLogEntry("Leg 2 rematch started!");
+                addLogEntry(`Leg 1: ${gameState.team1.name} ${gameState.leg1Score.team1}-${gameState.leg1Score.team2} ${gameState.team2.name}`);
+                updateAggregateDisplay();
+            } else {
+                addLogEntry("Rematch started!");
+                if (gameState.isTwoLegs) {
+                    addLogEntry(`Leg 1: ${gameState.team1.name} ${gameState.leg1Score.team1}-${gameState.leg1Score.team2} ${gameState.team2.name}`);
+                    updateAggregateDisplay();
+                }
+            }
+            
+            // Start simulation based on mode
+            if (gameState.isImmediate) {
+                simulateFullMatch();
+            } else {
+                simulateLive();
+            }
+        });
+        
+        document.getElementById('new-match').addEventListener('click', function() {
+            // Go back to setup screen
+            elements.gameScreen.classList.add('hidden');
+            elements.setupScreen.classList.remove('hidden');
+        });
+        
+        document.getElementById('leg2').addEventListener('click', function() {
+            // Set leg 1 scores to current match scores
+            gameState.leg1Score.team1 = gameState.team1.score;
+            gameState.leg1Score.team2 = gameState.team2.score;
+            gameState.isLeg2 = true; // Mark as Leg 2
+            gameState.isTwoLegs = true; // Now it's a two-leg tie
+            
+            // Reset scores, time, events, and penalties
+            gameState.team1.score = 0;
+            gameState.team2.score = 0;
+            gameState.time = 0;
+            gameState.events = [];
+            gameState.isExtraTime = false;
+            gameState.isPenalties = false;
+            gameState.penalties = { team1: 0, team2: 0, shots: [] };
+            gameState.matchEnded = false;
+            
+            // RESET stats
+            gameState.stats = {
+                shots: { team1: 0, team2: 0 },
+                shotsOnTarget: { team1: 0, team2: 0 },
+                possession: { 
+                    team1: Math.floor(Math.random() * 41) + 30, // Random between 30-70
+                    get team2() {
+                        return 100 - this.team1;
+                    }
+                 }
+            };
+            
+            // Recalculate extra time
+            calculateExtraTime();
+            
+            // Update UI
+            elements.team1Score.textContent = "0";
+            elements.team2Score.textContent = "0";
+            elements.gameTime.textContent = "0'";
+            elements.gameLog.innerHTML = "";
+            elements.eventsBody.innerHTML = "";
+            elements.penaltyShootout.classList.add('hidden');
+            elements.statsContainer.classList.add('hidden');
+            elements.leg2Button.classList.add('hidden');
+            elements.extraTimeButton.classList.add('hidden');
+            
+            updateMatchStatus();
+            
+            // Add initial event
+            addLogEntry(`Leg 1: ${gameState.team1.name} ${gameState.leg1Score.team1}-${gameState.leg1Score.team2} ${gameState.team2.name}`);
+            addLogEntry("Leg 2 started!");
+            updateAggregateDisplay();
+            
+            // Start simulation based on mode
+            if (gameState.isImmediate) {
+                simulateFullMatch();
+            } else {
+                simulateLive();
+            }
+        });
+        
+        document.getElementById('extra-time').addEventListener('click', function() {
+            // Clear any existing interval
+            if (gameState.simulationInterval) {
+                clearInterval(gameState.simulationInterval);
+            }
+            
+            // Reset time to 90 if we're not already in extra time
+            if (!gameState.isExtraTime) {
+                gameState.time = 90;
+                elements.gameTime.textContent = "90'";
+            }
+            
+            gameState.isExtraTime = true;
+            gameState.matchEnded = false;
+            elements.extraTimeButton.classList.add('hidden');
+            addLogEntry("Extra time started!");
+
+            elements.gameTime.classList.remove('hidden');
+            elements.matchStatus.classList.add('hidden');
+            
+            // Check simulation mode
+            if (gameState.isLive) {
+                // Live simulation - use the interval-based approach
+                simulateLiveExtraTime();
+            } else {
+                // Immediate result - simulate all at once
+                startExtraTime();
+            }
+        });
+    </script>
+</body>
+</html>
