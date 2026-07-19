@@ -356,6 +356,8 @@
         <div id="game-screen" class="hidden">
             <div class="scoreboard">
                 <div class="team-score">
+                    <!-- Added Home Logo Element -->
+                    <img id="team1-logo" src="" alt="" style="width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; display: none;">
                     <div class="team-name" id="team1-name">Home</div>
                     <div class="score" id="team1-score">0</div>
                 </div>
@@ -364,6 +366,8 @@
                     <div class="match-status hidden" id="match-status"></div>
                 </div>
                 <div class="team-score">
+                    <!-- Added Away Logo Element -->
+                    <img id="team2-logo" src="" alt="" style="width: 50px; height: 50px; object-fit: contain; margin-bottom: 5px; display: none;">
                     <div class="team-name" id="team2-name">Away</div>
                     <div class="score" id="team2-score">0</div>
                 </div>
@@ -478,6 +482,8 @@
         const elements = {
             setupScreen: document.getElementById('setup-screen'),
             gameScreen: document.getElementById('game-screen'),
+            team1Logo: document.getElementById('team1-logo'),
+            team2Logo: document.getElementById('team2-logo'),
             team1Name: document.getElementById('team1-name'),
             team2Name: document.getElementById('team2-name'),
             team1Score: document.getElementById('team1-score'),
@@ -815,6 +821,69 @@
         }
 
         function updateUI() {
+            // ---- 1. COMPLETE FILENAME DICTIONARY FOR ALL TEAMS ----
+            const logoFilenames = {
+                "AC MILAN": "acm.png",
+                "ARSENAL": "ars.png",
+                "ASTON VILLA": "aston.png",
+                "ATALANTA": "atalanta.png",
+                "ATHLETIC CLUB": "athletic.png",
+                "ATLÉTICO MADRID": "atleti.png",
+                "BARCELONA": "barc.png",
+                "BAYERN MUNICH": "bayern.png",
+                "BENFICA": "benfica.png",
+                "BREST": "brest.png",
+                "CHELSEA": "chelsea.png",
+                "MAN CITY": "city.png",
+                "DORTMUND": "dortmund.png",
+                "FIORENTINA": "fio.png",
+                "INTER MILAN": "inter.png",
+                "JUVENTUS": "juve.png",
+                "S.S. LAZIO": "lazio.png",
+                "RB LEIPZIG": "rbl.png",        // Custom shorthand
+                "LEVERKUSEN": "lev.png",        // Custom shorthand
+                "LIVERPOOL": "liverpool.png",
+                "MARSEILLE": "marseille.png",
+                "MONACO": "monaco.png",
+                "NAPOLI": "napoli.png",
+                "NEWCASTLE": "newc.png",
+                "PORTO": "porto.png",
+                "PSG": "psg.png",
+                "REAL MADRID": "real.png",
+                "ROMA": "roma.png",
+                "SEVILLA": "sev.png",
+                "SPORTING CP": "sporting.png",
+                "TOTTENHAM": "tot.png",
+                "MAN UNITED": "united.png"
+            };
+        
+            // ---- 2. GRAB VALUES FROM DROPDOWNS ----
+            const presetTeam1 = document.getElementById('preset-team1').value;
+            const customTeam1 = document.getElementById('custom-team1').value;
+            const presetTeam2 = document.getElementById('preset-team2').value;
+            const customTeam2 = document.getElementById('custom-team2').value;
+        
+            // ---- 3. APPLY HOME LOGO ----
+            if (customTeam1) {
+                elements.team1Logo.style.display = 'none'; // Hide if user typed a custom name
+            } else {
+                // Look up file name in the map. If it's a duplicated team name (e.g. "AC MILAN 2"), 
+                // clean it up so it matches the base key.
+                const cleanKey1 = presetTeam1.replace(" 2", "");
+                elements.team1Logo.src = logoFilenames[cleanKey1] || (cleanKey1.toLowerCase() + '.png'); 
+                elements.team1Logo.style.display = 'inline-block';
+            }
+        
+            // ---- 4. APPLY AWAY LOGO ----
+            if (customTeam2) {
+                elements.team2Logo.style.display = 'none'; // Hide if user typed a custom name
+            } else {
+                const cleanKey2 = presetTeam2.replace(" 2", "");
+                elements.team2Logo.src = logoFilenames[cleanKey2] || (cleanKey2.toLowerCase() + '.png');
+                elements.team2Logo.style.display = 'inline-block';
+            }
+        
+            // Existing UI code continues exactly as before...
             elements.team1Name.textContent = gameState.team1.name;
             elements.team2Name.textContent = gameState.team2.name;
             elements.team1Score.textContent = gameState.team1.score;
