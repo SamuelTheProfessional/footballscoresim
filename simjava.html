@@ -1441,24 +1441,23 @@ function showPostMatchOptions() {
                 const homeTaken = takenPenalties.filter(p => p.team === 'home').length;
                 const awayTaken = takenPenalties.filter(p => p.team === 'away').length;
                 
-                const homeRemaining = totalRounds - homeTaken;
-                const awayRemaining = totalRounds - awayTaken;
-                
-                // Check if the team about to shoot cannot possibly catch up
-                if (currentTeam === 'home') {
-                    // Home is about to shoot - check if away can't catch up
-                    if (gameState.penalties.team1 > gameState.penalties.team2 + awayRemaining) {
-                        endPenaltyShootout();
-                        return true;
-                    }
-                } else {
-                    // Away is about to shoot - check if home can't catch up  
-                    if (gameState.penalties.team2 > gameState.penalties.team1 + homeRemaining) {
-                        endPenaltyShootout();
-                        return true;
+                // Only apply regular 5-round math if we are still within the first 5 rounds
+                if (homeTaken < totalRounds || awayTaken < totalRounds) {
+                    const awayRemaining = totalRounds - awayTaken;
+                    const homeRemaining = totalRounds - homeTaken;
+                    
+                    if (currentTeam === 'home') {
+                        if (gameState.penalties.team1 > gameState.penalties.team2 + awayRemaining) {
+                            endPenaltyShootout();
+                            return true;
+                        }
+                    } else {
+                        if (gameState.penalties.team2 > gameState.penalties.team1 + homeRemaining) {
+                            endPenaltyShootout();
+                            return true;
+                        }
                     }
                 }
-                
                 return false;
             }
 
@@ -1468,33 +1467,42 @@ function showPostMatchOptions() {
                 const homeTaken = takenPenalties.filter(p => p.team === 'home').length;
                 const awayTaken = takenPenalties.filter(p => p.team === 'away').length;
                 
-                const homeRemaining = totalRounds - homeTaken;
-                const awayRemaining = totalRounds - awayTaken;
-                
-                // Check if the team that just shot made the other team mathematically out
-                if (currentTeam === 'home') {
-                    // Home just shot - check if away can't catch up
-                    if (gameState.penalties.team1 > gameState.penalties.team2 + awayRemaining) {
+                // 1. Regular phase math (First 5 rounds)
+                if (homeTaken <= totalRounds && awayTaken <= totalRounds) {
+                    const awayRemaining = totalRounds - awayTaken;
+                    const homeRemaining = totalRounds - homeTaken;
+                    
+                    if (currentTeam === 'home') {
+                        if (gameState.penalties.team1 > gameState.penalties.team2 + awayRemaining) {
+                            endPenaltyShootout();
+                            return true;
+                        }
+                    } else {
+                        if (gameState.penalties.team2 > gameState.penalties.team1 + homeRemaining) {
+                            endPenaltyShootout();
+                            return true;
+                        }
+                    }
+                    
+                    // Exactly at the end of round 5
+                    if (homeTaken === totalRounds && awayTaken === totalRounds && gameState.penalties.team1 !== gameState.penalties.team2) {
                         endPenaltyShootout();
                         return true;
                     }
-                } else {
-                    // Away just shot - check if home can't catch up
-                    if (gameState.penalties.team2 > gameState.penalties.team1 + homeRemaining) {
+                } 
+                // 2. Sudden Death phase math (Round 6+)
+                else {
+                    // In sudden death, a winner can ONLY be decided if both teams have taken an equal number of shots
+                    if (homeTaken === awayTaken && gameState.penalties.team1 !== gameState.penalties.team2) {
                         endPenaltyShootout();
                         return true;
                     }
-                }
-                
-                // After all 5 rounds (each team has had 5 penalties), check if scores differ
-                if (homeTaken >= totalRounds && awayTaken >= totalRounds && gameState.penalties.team1 !== gameState.penalties.team2) {
-                    endPenaltyShootout();
-                    return true;
                 }
                 
                 return false;
             }
 
+            
             function endPenaltyShootout() {
                 gameState.matchEnded = true;
                 endMatch();
